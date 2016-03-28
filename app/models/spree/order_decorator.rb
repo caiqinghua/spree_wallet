@@ -70,26 +70,24 @@ Spree::Order.class_eval do
   ### This methods are extensions of spree/order/checkout.rb
 
   def update_params_payment_source
-    if has_checkout_step?("payment") && self.payment?
-      if @updating_params[:payment_source].present?
-        source_params = @updating_params.delete(:payment_source)[non_wallet_payment_method]
+    if @updating_params[:payment_source].present?
+      source_params = @updating_params.delete(:payment_source)[non_wallet_payment_method]
 
-        if source_params
-          non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).first[:source_attributes] = source_params
-        end
+      if source_params
+        non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).first[:source_attributes] = source_params
       end
+    end
 
-      if (@updating_params[:order][:payments_attributes])
-        user = user_or_by_email
-        # This method is overrided because spree add all order total in first payment, now after wallet we can have multiple payments.
-        if user && available_wallet_payment_method
-          wallet_payments = wallet_payment_attributes(@updating_params[:order][:payments_attributes])
-          wallet_payments.first[:amount] = [remaining_total, user.store_credits_total].min if wallet_payments.present?
-          @updating_params[:order][:payments_attributes] = wallet_payments if remaining_order_total_after_wallet(wallet_payments) <= 0
-          non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).first[:amount] = remaining_order_total_after_wallet(wallet_payments) if non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).present?
-        else
-          @updating_params[:order][:payments_attributes].first[:amount] = remaining_total
-        end
+    if (@updating_params[:order][:payments_attributes])
+      user = user_or_by_email
+      # This method is overrided because spree add all order total in first payment, now after wallet we can have multiple payments.
+      if user && available_wallet_payment_method
+        wallet_payments = wallet_payment_attributes(@updating_params[:order][:payments_attributes])
+        wallet_payments.first[:amount] = [remaining_total, user.store_credits_total].min if wallet_payments.present?
+        @updating_params[:order][:payments_attributes] = wallet_payments if remaining_order_total_after_wallet(wallet_payments) <= 0
+        non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).first[:amount] = remaining_order_total_after_wallet(wallet_payments) if non_wallet_payment_attributes(@updating_params[:order][:payments_attributes]).present?
+      else
+        @updating_params[:order][:payments_attributes].first[:amount] = remaining_total
       end
     end
     @updating_params[:order]

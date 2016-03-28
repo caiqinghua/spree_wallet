@@ -23,7 +23,6 @@ Spree::CheckoutController.class_eval do
     end
 
     def check_wallet_payment?
-      @order && @order.has_checkout_step?("payment") && @order.payment? &&
-        @order.available_wallet_payment_method
+      @order && @order.available_wallet_payment_method
     end
 end
