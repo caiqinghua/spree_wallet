@@ -31,5 +31,9 @@ module Spree
     def cancel(*args)
       ActiveMerchant::Billing::Response.new(true, "", {}, {})
     end
+
+    def capture(amount, response_code, gateway_options)
+      ActiveMerchant::Billing::Response.new(true, 'WalletPay:#{response_code}', {}, test: false)
+    end
   end
 end

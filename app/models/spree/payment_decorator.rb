@@ -10,8 +10,6 @@ Spree::Payment.class_eval do
 
   validate :restrict_wallet_when_no_user
 
-  after_create :complete!, if: :wallet?
-
   delegate :remaining_total, :user_or_by_email, to: :order, prefix: true, allow_nil: true
 
   fsm = self.state_machines[:state]
