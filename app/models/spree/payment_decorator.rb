@@ -35,28 +35,32 @@ Spree::Payment.class_eval do
     end
 
     def consume_user_credits
-      debit_store_credits(amount)
+      debit_store_credits(amount, order)
     end
 
     def release_user_credits
-      credit_store_credits(credit_allowed)
+      credit_store_credits(credit_allowed, order)
     end
 
-    def debit_store_credits(amount)
+    def debit_store_credits(amount, order)
+      return if Spree::StoreCredit.find_by(creditable: order)
       Spree::Debit.create!(
         amount: amount,
         payment_mode: Spree::Debit::PAYMENT_MODE['Order Purchase'],
         reason: Spree.t(:store_debit_reason, order_number: order.number),
-        user: order_user_or_by_email, balance: calculate_balance(amount)
+        user: order_user_or_by_email, balance: calculate_balance(amount),
+        creditable: order
       )
     end
 
-    def credit_store_credits(amount)
+    def credit_store_credits(amount, order)
+      return if Spree::StoreCredit.find_by(creditable: order)
       Spree::Credit.create!(
         amount: amount,
         payment_mode: Spree::Credit::PAYMENT_MODE['Payment Refund'],
         reason: Spree.t(:store_credit_reason, order_number: order.number),
-        user: order_user_or_by_email, balance: calculate_balance(amount)
+        user: order_user_or_by_email, balance: calculate_balance(amount),
+        creditable: order
       )
     end
 
