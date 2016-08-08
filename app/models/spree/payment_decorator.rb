@@ -22,8 +22,8 @@ Spree::Payment.class_eval do
 
   def invalidate_old_payments
     order.payments.with_state('checkout').where("id != ?", self.id).each do |payment|
-      payment.invalidate!
-    end unless wallet?
+      payment.invalidate! unless payment.wallet?
+    end
   end
 
   private
@@ -78,5 +78,29 @@ Spree::Payment.class_eval do
 
     def order_total_remaining
       order_remaining_total.to_f
+    end
+
+    def update_order
+      if state == "checkout"
+        return
+      end
+
+      if wallet? && !order.reload.payments.last.wallet?
+        return
+      end
+
+      if completed? || void?
+        order.updater.update_payment_total
+      end
+
+      if order.completed?
+        order.updater.update_payment_state
+        order.updater.update_shipments
+        order.updater.update_shipment_state
+      end
+
+      if self.completed? || order.completed?
+        order.persist_totals
+      end
     end
 end
